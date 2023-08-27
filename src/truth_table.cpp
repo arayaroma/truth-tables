@@ -36,22 +36,22 @@ TruthTable &TruthTable::show_variables() {
   return *this;
 }
 
-void TruthTable::display_header(int maxExprLength, int separatorWidth) {
-  Logger::get_instance().log("+" + std::string(separatorWidth, '-') + "+");
+void TruthTable::display_header(int max_expr_lenght, int separator_width) {
+  Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
 
-  Logger::get_instance().log("|" + format_header(variables, maxExprLength) +
-                             format_header(expressions, maxExprLength));
+  Logger::get_instance().log("|" + format_header(variables, max_expr_lenght) +
+                             format_header(expressions, max_expr_lenght));
 
-  Logger::get_instance().log("+" + std::string(separatorWidth, '-') + "+");
+  Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
 }
 
 void TruthTable::calculate_num_rows() {
   num_rows = static_cast<int>(std::pow(2, variables.size()));
 }
 
-void TruthTable::calculate_separator_width(int maxExprLength) {
+void TruthTable::calculate_separator_width(int max_expr_length) {
   separator_width =
-      (variables.size() + expressions.size()) * (maxExprLength + 3) - 1;
+      (variables.size() + expressions.size()) * (max_expr_length + 3) - 1;
 }
 
 void TruthTable::calculate_max_expr_length() {
@@ -90,29 +90,28 @@ void TruthTable::display_variables_and_expressions() {
   }
   Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
 }
-
 std::string TruthTable::format_header(const std::vector<std::string> &items,
-                                      int maxExprLength) {
+                                      int max_expr_length) {
   std::string formatted = "";
   for (const std::string &item : items) {
     formatted +=
-        " " + item + std::string(maxExprLength - item.length(), ' ') + " |";
+        " " + item + std::string(max_expr_length - item.length(), ' ') + " |";
   }
   return formatted;
 }
 
 std::string TruthTable::format_header(const std::set<char> &items,
-                                      int maxExprLength) {
+                                      int max_expr_length) {
   std::string formatted = "";
   for (char item : items) {
     formatted +=
-        " " + std::string(1, item) + std::string(maxExprLength - 1, ' ') + " |";
+        " " + std::string(1, item) + std::string(max_expr_length - 1, ' ') + " |";
   }
   return formatted;
 }
 
-std::string TruthTable::format_cell(bool value, int maxExprLength) {
-  return " " + std::to_string(value) + std::string(maxExprLength - 1, ' ') +
+std::string TruthTable::format_cell(bool value, int max_expr_length) {
+  return " " + std::to_string(value) + std::string(max_expr_length - 1, ' ') +
          " ";
 }
 

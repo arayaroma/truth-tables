@@ -25,13 +25,13 @@ public:
   TruthTable &show_variables();
   void calculate_num_rows();
   void calculate_max_expr_length();
-  void calculate_separator_width(int maxExprLenght);
-  void display_header(int maxExprLenght, int separatorWidth);
+  void calculate_separator_width(int max_expr_length);
+  void display_header(int max_expr_lenght, int separator_width);
   void display_variables_and_expressions();
   std::string format_header(const std::vector<std::string> &items,
-                            int maxExprLenght);
-  std::string format_header(const std::set<char> &items, int maxExprLenght);
-  std::string format_cell(bool value, int maxExprLenght);
+                            int max_expr_length);
+  std::string format_header(const std::set<char> &items, int max_expr_length);
+  std::string format_cell(bool value, int max_expr_length);
   bool evaluate_expression(const std::string &expr, int i);
   bool get_value(int row, char var);
 };
