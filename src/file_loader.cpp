@@ -1,5 +1,4 @@
 #include "file_loader.hpp"
-#include "truth_table.hpp"
 
 FileLoader::FileLoader() { setup_function_map(); }
 
@@ -32,15 +31,15 @@ void FileLoader::display_files() {
   Logger::get_instance().clear_console();
   Logger::get_instance().log("Available files:");
   int number = 1;
-  for (const std::string &filename : files) {
-    Logger::get_instance().log("[" + std::to_string(number) + "] " + filename);
+  for (const std::string &file : files) {
+    Logger::get_instance().log("[" + std::to_string(number) + "] " + file);
     number++;
   }
 }
 
 void FileLoader::select_existing_file() {
   load_existing_files().display_files();
-  Logger::get_instance().log("[+] Select a file: ");
+  Logger::get_instance().log_not_jump("[+] Select a file: ");
   std::string userInput = Logger::get_instance().get_user_input();
 
   int selectedNumber = std::stoi(userInput);
@@ -56,7 +55,7 @@ void FileLoader::load_file(const std::string &file) {
   std::string line;
   TruthTable truthTable;
   while (std::getline(input_file, line)) {
-    truthTable.generate_table(line);
+    truthTable.parse_expression(line).show_variables().build_table();
   }
   input_file.close();
 }

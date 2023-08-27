@@ -1,5 +1,6 @@
 #pragma once
 #include "logger.hpp"
+#include "truth_table.hpp"
 #include <filesystem>
 #include <fstream>
 #include <functional>

@@ -9,6 +9,8 @@ class Logger {
 
 public:
   void log(const std::string &message);
+  void line_jump();
+  void log_not_jump (const std::string &message);
   void log_title();
   void log_menu();
   void clear_console();
