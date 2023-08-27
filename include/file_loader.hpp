@@ -13,6 +13,7 @@ public:
   FileLoader();
   void setup_function_map();
   void handle_user_input(const std::string &user_option);
+  void load_file(const std::string &file);
   FileLoader &load_from_file();
   FileLoader &load_existing_files();
   void display_files();

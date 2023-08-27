@@ -1,4 +1,5 @@
 #include "file_loader.hpp"
+#include "truth_table.hpp"
 
 FileLoader::FileLoader() { setup_function_map(); }
 
@@ -39,4 +40,23 @@ void FileLoader::display_files() {
 
 void FileLoader::select_existing_file() {
   load_existing_files().display_files();
+  Logger::get_instance().log("[+] Select a file: ");
+  std::string userInput = Logger::get_instance().get_user_input();
+
+  int selectedNumber = std::stoi(userInput);
+  if (selectedNumber >= 1 && selectedNumber <= files.size()) {
+    load_file(files[selectedNumber - 1]);
+  } else {
+    Logger::get_instance().log("[!] Invalid file number.");
+  }
+}
+
+void FileLoader::load_file(const std::string &file) {
+  std::ifstream input_file(directoryPath / file);
+  std::string line;
+  TruthTable truthTable;
+  while (std::getline(input_file, line)) {
+    truthTable.generate_table(line);
+  }
+  input_file.close();
 }

@@ -14,12 +14,14 @@ set(SOURCES
     ${SOURCE_DIR}/file_loader.cpp
     ${SOURCE_DIR}/logger.cpp
     ${SOURCE_DIR}/truth_table.cpp
+    ${SOURCE_DIR}/logical_operators.cpp
 )
 
 set(HEADERS
     ${INCLUDE_DIR}/file_loader.hpp
     ${INCLUDE_DIR}/logger.hpp
     ${INCLUDE_DIR}/truth_table.hpp
+    ${INCLUDE_DIR}/logical_operators.hpp
 )
 
 add_executable(
