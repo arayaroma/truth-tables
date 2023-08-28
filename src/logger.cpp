@@ -14,8 +14,8 @@ void Logger::log(const std::string &message) {
 }
 
 void Logger::line_jump() { std::cout << std::endl; }
-
 void Logger::log_not_jump(const std::string &message) { std::cout << message; }
+void Logger::clear_console() { system("clear"); }
 
 void Logger::log_title() {
   log("╔════════════════════════╗");
@@ -36,5 +36,3 @@ std::string Logger::get_user_input() {
   std::cin >> userOption;
   return userOption;
 }
-
-void Logger::clear_console() { system("clear"); }

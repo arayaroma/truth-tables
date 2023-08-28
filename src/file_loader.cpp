@@ -4,7 +4,6 @@ FileLoader::FileLoader() { setup_function_map(); }
 
 void FileLoader::setup_function_map() {
   function_map["1"] = std::bind(&FileLoader::select_existing_file, this);
-  function_map["2"] = std::bind(&FileLoader::load_from_file, this);
 }
 
 void FileLoader::handle_user_input(const std::string &user_option) {
@@ -15,8 +14,6 @@ void FileLoader::handle_user_input(const std::string &user_option) {
     Logger::get_instance().log("[!] Invalid option.");
   }
 }
-
-FileLoader &FileLoader::load_from_file() { return *this; }
 
 FileLoader &FileLoader::load_existing_files() {
   for (const auto &entry : std::filesystem::directory_iterator{directoryPath}) {

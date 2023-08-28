@@ -116,9 +116,6 @@ std::string TruthTable::format_cell(bool value, int max_expr_length) {
          " ";
 }
 
-int TruthTable::get_num_rows() const { return num_rows; }
-int TruthTable::get_num_variables() const { return variables.size(); }
-
 TruthTable &TruthTable::load_table(TruthTable &truth_table) {
   num_rows = truth_table.get_num_rows();
   num_vars = truth_table.get_num_variables();
@@ -131,17 +128,6 @@ TruthTable &TruthTable::load_table(TruthTable &truth_table) {
     }
   }
   return *this;
-}
-
-int TruthTable::get_variable(const std::string &token) {
-  int index = 0;
-  for (const std::string &var : variables) {
-    if (var == token) {
-      return index;
-    }
-    ++index;
-  }
-  return -1; // Variable not found
 }
 
 bool TruthTable::evaluate_expression(const std::string &expr, int i) {
@@ -212,3 +198,17 @@ int TruthTable::get_value(int row, int var) {
   }
   return 0;
 }
+
+int TruthTable::get_variable(const std::string &token) {
+  int index = 0;
+  for (const std::string &var : variables) {
+    if (var == token) {
+      return index;
+    }
+    ++index;
+  }
+  return -1;
+}
+
+int TruthTable::get_num_rows() const { return num_rows; }
+int TruthTable::get_num_variables() const { return variables.size(); }
