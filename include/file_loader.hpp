@@ -19,6 +19,8 @@ public:
   FileLoader &load_existing_files();
   void display_files();
   void select_existing_file();
+  void clear_files() { files.clear(); }
+  void create_file(const std::string &file, const std::string &expression);
 
 private:
   std::vector<std::string> files;

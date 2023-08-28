@@ -1,5 +1,5 @@
 #include "truth_table.hpp"
-#include <string>
+#include "logical_operators.hpp"
 
 TruthTable::TruthTable() {}
 
@@ -20,8 +20,9 @@ TruthTable &TruthTable::parse_expression(const std::string &expression) {
 void TruthTable::parse_variables() {
   for (const std::string &expr : expressions) {
     for (char c : expr) {
-      if (c != '\'' && LogicalOperators::is_variable(c)) {
-        variables.insert(c);
+      std::string token(1, c); // Convert the character to a string
+      if (token != "'" && LogicalOperators::is_variable(token)) {
+        variables.insert(token);
       }
     }
   }
@@ -29,8 +30,8 @@ void TruthTable::parse_variables() {
 
 TruthTable &TruthTable::show_variables() {
   Logger::get_instance().log_not_jump("Variables: ");
-  for (const char &var : variables) {
-    Logger::get_instance().log_not_jump(std::string(1, var));
+  for (const std::string &var : variables) {
+    Logger::get_instance().log_not_jump(var);
   }
   Logger::get_instance().line_jump();
   return *this;
@@ -67,6 +68,7 @@ TruthTable &TruthTable::build_table() {
   calculate_max_expr_length();
   calculate_separator_width(max_expr_length);
   display_header(max_expr_length, separator_width);
+  load_table(*this);
   display_variables_and_expressions();
   return *this;
 }
@@ -75,7 +77,7 @@ void TruthTable::display_variables_and_expressions() {
   for (i = 0; i < num_rows; ++i) {
     int index = variables.size() - 1;
     Logger::get_instance().log_not_jump("|");
-    for (char var : variables) {
+    for (std::string var : variables) {
       bool value = (i >> index) & 1;
       Logger::get_instance().log_not_jump(format_cell(value, max_expr_length) +
                                           "|");
@@ -100,12 +102,11 @@ std::string TruthTable::format_header(const std::vector<std::string> &items,
   return formatted;
 }
 
-std::string TruthTable::format_header(const std::set<char> &items,
+std::string TruthTable::format_header(const std::set<std::string> &items,
                                       int max_expr_length) {
   std::string formatted = "";
-  for (char item : items) {
-    formatted +=
-        " " + std::string(1, item) + std::string(max_expr_length - 1, ' ') + " |";
+  for (std::string item : items) {
+    formatted += " " + item + std::string(max_expr_length - 1, ' ') + " |";
   }
   return formatted;
 }
@@ -115,73 +116,99 @@ std::string TruthTable::format_cell(bool value, int max_expr_length) {
          " ";
 }
 
-bool TruthTable::evaluate_expression(const std::string &expr, int i) {
-  std::stack<bool> operands;
-  std::stack<char> operators;
+int TruthTable::get_num_rows() const { return num_rows; }
+int TruthTable::get_num_variables() const { return variables.size(); }
 
-  for (char c : expr) {
-    if (LogicalOperators::is_variable(c)) {
-      operands.push(get_value(i, c));
-    } else if (LogicalOperators::is_operator(c)) {
-      while (!operators.empty() &&
-             operators.top() != LogicalOperators::LEFT_PARENTHESIS &&
-             LogicalOperators::precedence(c) <=
-                 LogicalOperators::precedence(operators.top())) {
-        char op = operators.top();
-        operators.pop();
+TruthTable &TruthTable::load_table(TruthTable &truth_table) {
+  num_rows = truth_table.get_num_rows();
+  num_vars = truth_table.get_num_variables();
 
-        bool second_operand = operands.top();
-        operands.pop();
-        bool first_operand = operands.top();
-        operands.pop();
+  table.resize(num_rows, std::vector<int>(num_vars));
 
-        operands.push(LogicalOperators::apply_operator(op, first_operand,
-                                                       second_operand));
-      }
-      operators.push(c);
-    } else if (c == LogicalOperators::LEFT_PARENTHESIS) {
-      operators.push(c);
-    } else if (c == LogicalOperators::RIGHT_PARENTHESIS) {
-      while (!operators.empty() &&
-             operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
-        char op = operators.top();
-        operators.pop();
-
-        bool second_operand = operands.top();
-        operands.pop();
-        bool first_operand = operands.top();
-        operands.pop();
-
-        operands.push(LogicalOperators::apply_operator(op, first_operand,
-                                                       second_operand));
-      }
-      operators.pop(); // Pop the left parenthesis
+  for (int i = 0; i < num_rows; ++i) {
+    for (int j = 0; j < num_vars; ++j) {
+      table[i][j] = truth_table.get_value(i, j);
     }
   }
-
-  while (!operators.empty()) {
-    char op = operators.top();
-    operators.pop();
-
-    bool second_operand = operands.top();
-    operands.pop();
-    bool first_operand = operands.top();
-    operands.pop();
-
-    operands.push(
-        LogicalOperators::apply_operator(op, first_operand, second_operand));
-  }
-
-  return operands.top(); // The final result of the expression evaluation
+  return *this;
 }
 
-bool TruthTable::get_value(int row, char var) {
+int TruthTable::get_variable(const std::string &token) {
+  int index = 0;
+  for (const std::string &var : variables) {
+    if (var == token) {
+      return index;
+    }
+    ++index;
+  }
+  return -1; // Variable not found
+}
+
+bool TruthTable::evaluate_expression(const std::string &expr, int i) {
+  std::stack<std::string> operands;
+  std::stack<std::string> operators;
+  for (size_t pos = 0; pos < expr.length(); ++pos) {
+    std::string token = expr.substr(pos, 1);
+    if (LogicalOperators::is_variable(token)) {
+      operands.push(std::to_string(table[i][get_variable(token)]));
+    } else if (LogicalOperators::is_operator(token)) {
+      while (!operators.empty() &&
+             operators.top() != LogicalOperators::LEFT_PARENTHESIS &&
+             LogicalOperators::precedence(token) >
+                 LogicalOperators::precedence(operators.top())) {
+        std::string op = operators.top();
+        operators.pop();
+        std::string second_operand = operands.top();
+        operands.pop();
+        std::string first_operand = operands.top();
+        operands.pop();
+        operands.push(LogicalOperators::apply_operator(i, op, first_operand,
+                                                       second_operand, *this)
+                          ? LogicalOperators::TRUE
+                          : LogicalOperators::FALSE);
+      }
+      operators.push(token);
+    } else if (token == LogicalOperators::LEFT_PARENTHESIS) {
+      operators.push(token);
+    } else if (token == LogicalOperators::RIGHT_PARENTHESIS) {
+      while (!operators.empty() &&
+             operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
+        std::string op = operators.top();
+        operators.pop();
+        std::string second_operand = operands.top();
+        operands.pop();
+        std::string first_operand = operands.top();
+        operands.pop();
+        operands.push(LogicalOperators::apply_operator(i, op, first_operand,
+                                                       second_operand, *this)
+                          ? LogicalOperators::TRUE
+                          : LogicalOperators::FALSE);
+      }
+      operators.pop(); // Pop the '('
+    }
+  }
+  while (!operators.empty()) {
+    std::string op = operators.top();
+    operators.pop();
+    std::string second_operand = operands.top();
+    operands.pop();
+    std::string first_operand = operands.top();
+    operands.pop();
+    operands.push(LogicalOperators::apply_operator(i, op, first_operand,
+                                                   second_operand, *this)
+                      ? LogicalOperators::TRUE
+                      : LogicalOperators::FALSE);
+  }
+  return operands.top() == LogicalOperators::TRUE;
+}
+
+int TruthTable::get_value(int row, int var) {
   int index = variables.size() - 1;
-  for (char v : variables) {
-    if (v == var) {
+  for (const std::string &v : variables) {
+    if (index == var) {
       return (row >> index) & 1;
     }
     --index;
   }
-  return false;
+  return 0;
 }

@@ -26,7 +26,8 @@ void Logger::log_title() {
 void Logger::log_menu() {
   log_title();
   log("[1] Select an existing file");
-  log("[2] Load truth table from file");
+  log("[2] Create file and enter expressions");
+  log("[3] Exit");
   log_not_jump("[+] Select an option: ");
 }
 

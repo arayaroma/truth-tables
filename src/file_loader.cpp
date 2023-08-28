@@ -59,3 +59,10 @@ void FileLoader::load_file(const std::string &file) {
   }
   input_file.close();
 }
+
+void FileLoader::create_file(const std::string &file,
+                             const std::string &expression) {
+  std::ofstream output_file(directoryPath / (file + ".txt"));
+  output_file << expression;
+  output_file.close();
+}
