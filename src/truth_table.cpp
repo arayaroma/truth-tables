@@ -6,22 +6,44 @@ TruthTable::TruthTable() {}
 TruthTable &TruthTable::parse_expression(const std::string &expression) {
   expressions.clear();
   size_t start = 0;
-  size_t end = expression.find(',');
+  size_t end = expression.find(LogicalOperators::COMMA);
   while (end != std::string::npos) {
     expressions.push_back(expression.substr(start, end - start));
     start = end + 1;
-    end = expression.find(',', start);
+    end = expression.find(LogicalOperators::COMMA, start);
   }
   expressions.push_back(expression.substr(start));
+  expressions = separate_expressions();
+  expressions.push_back(expression);
   parse_variables();
   return *this;
+}
+
+std::vector<std::string> TruthTable::separate_expressions() {
+  std::vector<std::string> separated_expressions;
+  for (const std::string &expression : expressions) {
+    size_t start = 0;
+    size_t end = expression.find(LogicalOperators::OR);
+
+    while (end != std::string::npos) {
+      separated_expressions.push_back(expression.substr(start, end - start));
+      start = end + 1;
+      end = expression.find(LogicalOperators::OR, start);
+    }
+    if (start < expression.length()) {
+      separated_expressions.push_back(expression.substr(start));
+    }
+  }
+
+  return separated_expressions;
 }
 
 void TruthTable::parse_variables() {
   for (const std::string &expr : expressions) {
     for (char c : expr) {
-      std::string token(1, c); // Convert the character to a string
-      if (token != "'" && LogicalOperators::is_variable(token)) {
+      std::string token(1, c);
+      if (token != LogicalOperators::NOT &&
+          LogicalOperators::is_variable(token)) {
         variables.insert(token);
       }
     }
@@ -74,15 +96,17 @@ TruthTable &TruthTable::build_table() {
 }
 
 void TruthTable::display_variables_and_expressions() {
-  for (i = 0; i < num_rows; ++i) {
+  for (int i = 0; i < num_rows; ++i) {
     int index = variables.size() - 1;
     Logger::get_instance().log_not_jump("|");
-    for (std::string var : variables) {
+
+    for (const std::string &var : variables) {
       bool value = (i >> index) & 1;
       Logger::get_instance().log_not_jump(format_cell(value, max_expr_length) +
                                           "|");
       --index;
     }
+
     for (const std::string &expr : expressions) {
       bool value = evaluate_expression(expr, i);
       Logger::get_instance().log_not_jump(format_cell(value, max_expr_length) +
@@ -92,6 +116,7 @@ void TruthTable::display_variables_and_expressions() {
   }
   Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
 }
+
 std::string TruthTable::format_header(const std::vector<std::string> &items,
                                       int max_expr_length) {
   std::string formatted = "";
@@ -131,27 +156,28 @@ TruthTable &TruthTable::load_table(TruthTable &truth_table) {
 }
 
 bool TruthTable::evaluate_expression(const std::string &expr, int i) {
-  std::stack<std::string> operands;
   std::stack<std::string> operators;
-  for (size_t pos = 0; pos < expr.length(); ++pos) {
-    std::string token = expr.substr(pos, 1);
+  std::stack<std::string> operands;
+
+  for (char c : expr) {
+    std::string token(1, c);
     if (LogicalOperators::is_variable(token)) {
-      operands.push(std::to_string(table[i][get_variable(token)]));
+      operands.push(std::to_string(get_value(i, get_variable(token))));
     } else if (LogicalOperators::is_operator(token)) {
       while (!operators.empty() &&
-             operators.top() != LogicalOperators::LEFT_PARENTHESIS &&
-             LogicalOperators::precedence(token) >
-                 LogicalOperators::precedence(operators.top())) {
-        std::string op = operators.top();
+             LogicalOperators::precedence(operators.top()) >=
+                 LogicalOperators::precedence(token)) {
+        std::string value_d = operands.top();
+        operands.pop();
+
+        std::string value_c = operands.top();
+        operands.pop();
+
+        std::string operator_ = operators.top();
         operators.pop();
-        std::string second_operand = operands.top();
-        operands.pop();
-        std::string first_operand = operands.top();
-        operands.pop();
-        operands.push(LogicalOperators::apply_operator(i, op, first_operand,
-                                                       second_operand, *this)
-                          ? LogicalOperators::TRUE
-                          : LogicalOperators::FALSE);
+
+        operands.push(std::to_string(
+            LogicalOperators::apply_operator(operator_, value_c, value_d)));
       }
       operators.push(token);
     } else if (token == LogicalOperators::LEFT_PARENTHESIS) {
@@ -159,32 +185,36 @@ bool TruthTable::evaluate_expression(const std::string &expr, int i) {
     } else if (token == LogicalOperators::RIGHT_PARENTHESIS) {
       while (!operators.empty() &&
              operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
-        std::string op = operators.top();
+        std::string value_d = operands.top();
+        operands.pop();
+
+        std::string value_c = operands.top();
+        operands.pop();
+
+        std::string operator_ = operators.top();
         operators.pop();
-        std::string second_operand = operands.top();
-        operands.pop();
-        std::string first_operand = operands.top();
-        operands.pop();
-        operands.push(LogicalOperators::apply_operator(i, op, first_operand,
-                                                       second_operand, *this)
-                          ? LogicalOperators::TRUE
-                          : LogicalOperators::FALSE);
+
+        operands.push(std::to_string(
+            LogicalOperators::apply_operator(operator_, value_c, value_d)));
       }
-      operators.pop(); // Pop the '('
+      operators.pop();
     }
   }
+
   while (!operators.empty()) {
-    std::string op = operators.top();
+    std::string value_d = operands.top();
+    operands.pop();
+
+    std::string value_c = operands.top();
+    operands.pop();
+
+    std::string operator_ = operators.top();
     operators.pop();
-    std::string second_operand = operands.top();
-    operands.pop();
-    std::string first_operand = operands.top();
-    operands.pop();
-    operands.push(LogicalOperators::apply_operator(i, op, first_operand,
-                                                   second_operand, *this)
-                      ? LogicalOperators::TRUE
-                      : LogicalOperators::FALSE);
+
+    operands.push(std::to_string(
+        LogicalOperators::apply_operator(operator_, value_c, value_d)));
   }
+
   return operands.top() == LogicalOperators::TRUE;
 }
 

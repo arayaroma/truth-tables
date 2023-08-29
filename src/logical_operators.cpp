@@ -22,85 +22,35 @@ bool LogicalOperators::is_variable(std::string c) {
          c != TRUE && c != FALSE;
 }
 
-bool LogicalOperators::AND_OPERATOR(int index, std::string c, std::string d,
-                                    TruthTable &truth_table) {
-  bool value_c, value_d;
-
-  if (is_variable(c)) {
-    int variableIndex = truth_table.get_variable(c);
-    value_c = truth_table.get_value(index, variableIndex);
-  } else {
-    value_c = (c == TRUE);
-  }
-
-  if (is_variable(d)) {
-    int variableIndex = truth_table.get_variable(d);
-    value_d = truth_table.get_value(index, variableIndex);
-  } else {
-    value_d = (d == TRUE);
-  }
-
-  return value_c && value_d;
+bool LogicalOperators::AND_OPERATOR(std::string value_c, std::string value_d) {
+  return (value_c == TRUE) && (value_d == TRUE);
 }
 
-bool LogicalOperators::OR_OPERATOR(int index, std::string c, std::string d,
-                                   TruthTable &truth_table) {
-  bool value_c, value_d;
-
-  if (is_variable(c)) {
-    int variableIndex = truth_table.get_variable(c);
-    value_c = truth_table.get_value(index, variableIndex);
-  } else {
-    value_c = (c == TRUE);
-  }
-
-  if (is_variable(d)) {
-    int variableIndex = truth_table.get_variable(d);
-    value_d = truth_table.get_value(index, variableIndex);
-  } else {
-    value_d = (d == TRUE);
-  }
-
-  return value_c || value_d || (value_c && !value_d) || (!value_c && value_d);
+bool LogicalOperators::OR_OPERATOR(std::string value_c, std::string value_d) {
+  return (value_c == TRUE) || (value_d == TRUE);
 }
 
-bool LogicalOperators::NOT_OPERATOR(std::string c) { return c == FALSE; }
-
-bool LogicalOperators::XOR_OPERATOR(int index, std::string c, std::string d,
-                                    TruthTable &truth_table) {
-  bool value_c, value_d;
-
-  if (is_variable(c)) {
-    int variableIndex = truth_table.get_variable(c);
-    value_c = truth_table.get_value(index, variableIndex);
-  } else {
-    value_c = (c == TRUE);
-  }
-
-  if (is_variable(d)) {
-    int variableIndex = truth_table.get_variable(d);
-    value_d = truth_table.get_value(index, variableIndex);
-  } else {
-    value_d = (d == TRUE);
-  }
-
-  return (value_c && !value_d) || (!value_c && value_d);
+bool LogicalOperators::NOT_OPERATOR(std::string value) {
+  return (value == TRUE) ? false : true;
 }
 
-bool LogicalOperators::apply_operator(int index, std::string operator_,
+bool LogicalOperators::XOR_OPERATOR(std::string value_c, std::string value_d) {
+  return (value_c == FALSE) ^ (value_d == TRUE) ||
+         (value_c == TRUE) ^ (value_d == FALSE);
+}
+
+bool LogicalOperators::apply_operator(std::string operator_,
                                       std::string first_operand,
-                                      std::string second_operand,
-                                      TruthTable &truth_table) {
+                                      std::string second_operand) {
   if (operator_ == AND) {
-    return AND_OPERATOR(index, first_operand, second_operand, truth_table);
+    return AND_OPERATOR(first_operand, second_operand);
   } else if (operator_ == OR) {
-    return OR_OPERATOR(index, first_operand, second_operand, truth_table);
+    return OR_OPERATOR(first_operand, second_operand);
   } else if (operator_ == NOT) {
     return NOT_OPERATOR(first_operand);
   } else if (operator_ == XOR) {
-    return XOR_OPERATOR(index, first_operand, second_operand, truth_table);
+    return XOR_OPERATOR(first_operand, second_operand);
   } else {
-    std::cerr << "Invalid operator\n";
     return false;
   }
 }

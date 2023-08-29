@@ -25,6 +25,7 @@ public:
   TruthTable();
   TruthTable &parse_expression(const std::string &expression);
   void parse_variables();
+  std::vector<std::string> separate_expressions();
   TruthTable &build_table();
   TruthTable &show_variables();
   void calculate_num_rows();
