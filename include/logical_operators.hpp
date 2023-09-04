@@ -17,13 +17,13 @@ public:
   static const std::string TRUE;
   static const std::string FALSE;
 
-  static bool AND_OPERATOR(std::string c, std::string d);
-  static bool OR_OPERATOR(std::string c, std::string d);
-  static bool NOT_OPERATOR(std::string c);
-  static bool XOR_OPERATOR(std::string c, std::string d);
   static bool is_variable(std::string c);
   static bool is_operator(std::string c);
-  static bool apply_operator(std::string operator_, std::string first_operand,
-                             std::string second_operand);
-  static int precedence(std::string op);
+  static bool apply_operator(std::string operator_, bool first_operand,
+                             bool second_operand);
+  static bool apply_negation(bool first_operand);
+  static bool apply_and(bool first_operand, bool second_operand);
+  static bool apply_or(bool first_operand, bool second_operand);
+  static bool apply_xor(bool first_operand, bool second_operand);
+  static int precedence(std::string token);
 };

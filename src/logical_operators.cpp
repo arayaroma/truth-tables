@@ -17,54 +17,44 @@ bool LogicalOperators::is_operator(std::string c) {
 }
 
 bool LogicalOperators::is_variable(std::string c) {
-  return c != AND && c != OR && c != NOT && c != XOR && c != WHITE_SPACE &&
-         c != LEFT_PARENTHESIS && c != RIGHT_PARENTHESIS && c != COMMA &&
-         c != TRUE && c != FALSE;
+  return c != AND && c != OR && c != NOT && c != XOR && c != TRUE && c != FALSE;
 }
 
-bool LogicalOperators::AND_OPERATOR(std::string value_c, std::string value_d) {
-  return (value_c == TRUE) && (value_d == TRUE);
+bool LogicalOperators::apply_negation(bool first_operand) {
+  return first_operand ? false : true;
 }
 
-bool LogicalOperators::OR_OPERATOR(std::string value_c, std::string value_d) {
-  return (value_c == TRUE) || (value_d == TRUE);
+bool LogicalOperators::apply_and(bool first_operand, bool second_operand) {
+  return (first_operand == true && second_operand == true);
 }
 
-bool LogicalOperators::NOT_OPERATOR(std::string value) {
-  return (value == TRUE) ? false : true;
+bool LogicalOperators::apply_or(bool first_operand, bool second_operand) {
+  return (first_operand == true || second_operand == true);
 }
 
-bool LogicalOperators::XOR_OPERATOR(std::string value_c, std::string value_d) {
-  return (value_c == FALSE) ^ (value_d == TRUE) ||
-         (value_c == TRUE) ^ (value_d == FALSE);
+bool LogicalOperators::apply_xor(bool first_operand, bool second_operand) {
+  return (first_operand == true ^ second_operand == false);
 }
 
-bool LogicalOperators::apply_operator(std::string operator_,
-                                      std::string first_operand,
-                                      std::string second_operand) {
-  if (operator_ == AND) {
-    return AND_OPERATOR(first_operand, second_operand);
-  } else if (operator_ == OR) {
-    return OR_OPERATOR(first_operand, second_operand);
-  } else if (operator_ == NOT) {
-    return NOT_OPERATOR(first_operand);
-  } else if (operator_ == XOR) {
-    return XOR_OPERATOR(first_operand, second_operand);
-  } else {
-    return false;
-  }
+bool LogicalOperators::apply_operator(std::string operator_, bool first_operand,
+                                      bool second_operand) {
+  if (operator_ == AND)
+    return apply_and(first_operand, second_operand);
+  if (operator_ == OR)
+    return apply_or(first_operand, second_operand);
+  if (operator_ == XOR)
+    return apply_xor(first_operand, second_operand);
+  return false;
 }
 
-int LogicalOperators::precedence(std::string op) {
-  if (op == NOT) {
+int LogicalOperators::precedence(std::string token) {
+  if (token == NOT)
     return 3;
-  } else if (op == AND) {
+  if (token == AND)
     return 2;
-  } else if (op == OR) {
+  if (token == OR)
     return 1;
-  } else if (op == XOR) {
-    return 0;
-  } else {
-    return -1;
-  }
+  if (token == XOR)
+    return 1;
+  return 0;
 }
