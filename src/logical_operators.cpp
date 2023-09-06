@@ -13,7 +13,7 @@ const std::string LogicalOperators::TRUE = "1";
 const std::string LogicalOperators::FALSE = "0";
 
 bool LogicalOperators::is_operator(std::string c) {
-  return c == AND || c == OR || c == NOT || c == XOR;
+  return c == AND || c == OR || c == XOR;
 }
 
 bool LogicalOperators::is_variable(std::string c) {

@@ -14,7 +14,7 @@ TruthTable &TruthTable::parse_expression(const std::string &expression) {
   }
   expressions.push_back(expression.substr(start));
   expressions = separate_expressions();
-  expressions.push_back(expression);
+  final_expression = expression;
   parse_literals();
   parse_variables();
   return *this;
@@ -77,12 +77,16 @@ TruthTable &TruthTable::show_variables() {
   return *this;
 }
 
-void TruthTable::display_header(int max_expr_lenght, int separator_width) {
+void TruthTable::display_header(int max_expr_length, int separator_width) {
   Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
-
-  Logger::get_instance().log("|" + format_header(variables, max_expr_lenght) +
-                             format_header(expressions, max_expr_lenght));
-
+  Logger::get_instance().log_not_jump("|");
+  Logger::get_instance().log_not_jump(
+      format_header(variables, max_expr_length));
+  Logger::get_instance().log_not_jump(
+      format_header(expressions, max_expr_length));
+  Logger::get_instance().log_not_jump(
+      format_header(final_expression, max_expr_length));
+  Logger::get_instance().line_jump();
   Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
 }
 
@@ -92,15 +96,13 @@ void TruthTable::calculate_num_rows() {
 
 void TruthTable::calculate_separator_width(int max_expr_length) {
   separator_width =
-      (variables.size() + expressions.size()) * (max_expr_length + 3) - 1;
+      (variables.size() + expressions.size()) * (max_expr_length + 6) - 3;
 }
 
 void TruthTable::calculate_max_expr_length() {
   max_expr_length = 0;
-  for (const std::string &expr : expressions) {
-    max_expr_length =
-        std::max(max_expr_length, static_cast<int>(expr.length()));
-  }
+  max_expr_length =
+      std::max(max_expr_length, static_cast<int>(final_expression.length()));
 }
 
 TruthTable &TruthTable::build_table() {
@@ -125,11 +127,17 @@ void TruthTable::calculate_table() {
     }
     for (int j = variables.size(); j < variables.size() + expressions.size();
          ++j) {
+      resolved_table[i][j - variables.size()] =
+          evaluate_expression(expressions[j - variables.size()], i);
       Logger::get_instance().log_not_jump(
-          format_cell(evaluate_expression(expressions[j - variables.size()], i),
+          format_cell(resolved_table[i][j - variables.size()],
                       max_expr_length) +
           "|");
     }
+    Logger::get_instance().log_not_jump(
+        format_cell(evaluate_expression(final_expression, i) ? true : false,
+                    max_expr_length) +
+        "|");
     Logger::get_instance().line_jump();
   }
   Logger::get_instance().log("+" + std::string(separator_width, '-') + "+");
@@ -158,17 +166,15 @@ void TruthTable::clean_resolved_table() {
 void TruthTable::calculate_variables_truth_values() {
   for (int i = 0; i < num_rows; ++i) {
     for (int j = 0; j < variables.size(); ++j) {
-      table[i][j] = (i & (1 << j)) ? true : false;
+      int position = variables.size() - j - 1;
+      table[i][j] = (i & (1 << position)) ? true : false;
     }
   }
 }
 
-void TruthTable::calculate_expressions_truth_values() {
-  for (int i = 0; i < num_rows; ++i) {
-    for (int j = 0; j < expressions.size(); ++j) {
-      resolved_table[i][j] = evaluate_expression(expressions[j], i);
-    }
-  }
+std::string TruthTable::format_header(const std::string &item,
+                                      int max_expr_length) {
+  return " " + item + std::string(max_expr_length - item.length(), ' ') + " |";
 }
 
 std::string TruthTable::format_header(const std::vector<std::string> &items,
@@ -195,78 +201,53 @@ std::string TruthTable::format_cell(bool value, int max_expr_length) {
          " ";
 }
 
-bool TruthTable::evaluate_expression(std::string const &expr, int row) {
+bool TruthTable::evaluate_expression(const std::string &expr, int row) {
   std::stack<bool> operands;
   std::stack<std::string> operators;
+
   for (char c : expr) {
     std::string token(1, c);
-    bool variable_value = get_variable_value(row, c);
-    if (token == LogicalOperators::WHITE_SPACE) {
-      continue;
-    }
     if (LogicalOperators::is_variable(token)) {
-      operands.push(variable_value);
-
+      operands.push(get_variable_value(row, c));
     } else if (LogicalOperators::is_operator(token)) {
       while (!operators.empty() &&
              LogicalOperators::precedence(operators.top()) >=
                  LogicalOperators::precedence(token)) {
-        bool second_operand = operands.top();
-        operands.pop();
-        bool first_operand = operands.top();
-        operands.pop();
-        std::string operator_ = operators.top();
-        operators.pop();
-        operands.push(LogicalOperators::apply_operator(operator_, first_operand,
-                                                       second_operand));
+        apply_operator(operators, operands);
       }
       operators.push(token);
     } else if (token == LogicalOperators::LEFT_PARENTHESIS) {
       operators.push(token);
     } else if (token == LogicalOperators::RIGHT_PARENTHESIS) {
-      while (!operators.empty() &&
-             operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
-        bool second_operand = operands.top();
-        operands.pop();
-        bool first_operand = operands.top();
-        operands.pop();
-        std::string operator_ = operators.top();
-        operators.pop();
-        operands.push(LogicalOperators::apply_operator(operator_, first_operand,
-                                                       second_operand));
+      while (operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
+        apply_operator(operators, operands);
       }
       operators.pop();
     }
   }
+
   while (!operators.empty()) {
-    std::string operator_ = operators.top();
-    operators.pop();
-    if (operator_ == LogicalOperators::NOT) {
-      bool operand = operands.top();
-      operands.pop();
-      bool result = !operand;
-      operands.push(result);
-    } else {
-      bool second_operand = operands.top();
-      operands.pop();
-      bool first_operand = operands.top();
-      operands.pop();
-      if (operator_ == LogicalOperators::AND) {
-        bool result = first_operand && second_operand;
-        operands.push(result);
-      } else {
-        bool result = LogicalOperators::apply_operator(operator_, first_operand,
-                                                       second_operand);
-        operands.push(result);
-      }
-    }
+    apply_operator(operators, operands);
   }
-  bool final_first_op = operands.top();
-  operands.pop();
-  bool final_second_op = operands.top();
-  operands.pop();
-  bool final_result = final_first_op && final_second_op;
-  return final_result;
+  return operands.top();
+}
+
+void TruthTable::apply_operator(std::stack<std::string> &operators,
+                                std::stack<bool> &operands) {
+  std::string op = operators.top();
+  operators.pop();
+
+  if (op == LogicalOperators::NOT) {
+    bool operand = operands.top();
+    operands.pop();
+    operands.push(!operand);
+  } else if (op == LogicalOperators::AND) {
+    bool operand2 = operands.top();
+    operands.pop();
+    bool operand1 = operands.top();
+    operands.pop();
+    operands.push(LogicalOperators::apply_operator(op, operand1, operand2));
+  }
 }
 
 int TruthTable::get_num_rows() const { return num_rows; }

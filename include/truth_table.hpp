@@ -18,6 +18,7 @@ private:
   int num_rows, num_vars;
   int max_expr_length, separator_width;
   std::vector<std::string> expressions;
+  std::string final_expression;
   std::set<std::string> variables;
   std::set<std::string> literals;
   bool **table;
@@ -31,21 +32,21 @@ public:
   std::vector<std::string> separate_expressions();
   TruthTable &build_table();
   TruthTable &show_variables();
-
   void calculate_table();
-
   void calculate_variables_truth_values();
-  void calculate_expressions_truth_values();
   void calculate_num_rows();
   void calculate_max_expr_length();
   void calculate_separator_width(int max_expr_length);
-  void display_header(int max_expr_lenght, int separator_width);
+  void display_header(int max_expr_length, int separator_width);
   std::string format_header(const std::vector<std::string> &items,
                             int max_expr_length);
   std::string format_header(const std::set<std::string> &items,
                             int max_expr_length);
+  std::string format_header(const std::string &item, int max_expr_length);
   std::string format_cell(bool value, int max_expr_length);
-  bool evaluate_expression(std::string const &expr, int row);
+  bool evaluate_expression(const std::string &expr, int row);
+  void apply_operator(std::stack<std::string> &operators,
+                      std::stack<bool> &operands);
   int get_num_rows() const;
   int get_num_variables() const;
   std::string get_expression(int index) const;
