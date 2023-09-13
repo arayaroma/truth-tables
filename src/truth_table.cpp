@@ -15,26 +15,9 @@ TruthTable &TruthTable::parse_expression(const std::string &expression) {
   expressions.push_back(expression.substr(start));
   expressions = separate_expressions();
   final_expression = expression;
-  parse_literals();
+  show_tree();
   parse_variables();
   return *this;
-}
-
-void TruthTable::parse_literals() {
-  for (const std::string &expr : expressions) {
-    for (char c : expr) {
-      std::string token(1, c);
-      std::string next_token(1, expr[expr.find(token) + 1]);
-      if (token != LogicalOperators::NOT &&
-          LogicalOperators::is_variable(token)) {
-        if (next_token == LogicalOperators::NOT) {
-          literals.insert(token + next_token);
-        } else {
-          literals.insert(token);
-        }
-      }
-    }
-  }
 }
 
 std::vector<std::string> TruthTable::separate_expressions() {
@@ -52,8 +35,53 @@ std::vector<std::string> TruthTable::separate_expressions() {
       separated_expressions.push_back(expression.substr(start));
     }
   }
-
   return separated_expressions;
+}
+
+std::string TruthTable::infix_to_postfix(const std::string &expr) {
+  std::string postfix;
+  std::stack<std::string> operator_stack;
+
+  for (char c : expr) {
+    if (isalnum(c)) {
+      postfix += c;
+    } else if (c == '(') {
+      operator_stack.push(std::string(1, c));
+    } else if (c == ')') {
+      while (!operator_stack.empty() && operator_stack.top() != "(") {
+        postfix += operator_stack.top();
+        operator_stack.pop();
+      }
+      if (!operator_stack.empty() && operator_stack.top() == "(") {
+        operator_stack.pop();
+      }
+    } else {
+      while (!operator_stack.empty() && operator_stack.top() != "(" &&
+             LogicalOperators::precedence(std::string(1, c)) <=
+                 LogicalOperators::precedence(operator_stack.top())) {
+        postfix += operator_stack.top();
+        operator_stack.pop();
+      }
+      operator_stack.push(std::string(1, c));
+    }
+  }
+  while (!operator_stack.empty()) {
+    postfix += operator_stack.top();
+    operator_stack.pop();
+  }
+
+  return postfix;
+}
+
+void TruthTable::show_tree() {
+  tree = new Tree();
+  Logger::get_instance().log("Tree:");
+  for (const std::string &expression : this->expressions) {
+    tree->insert(infix_to_postfix(expression));
+    Logger::get_instance().log_not_jump(expression + " -> ");
+    tree->show(tree->root);
+  }
+  Logger::get_instance().line_jump();
 }
 
 void TruthTable::parse_variables() {
@@ -202,52 +230,7 @@ std::string TruthTable::format_cell(bool value, int max_expr_length) {
 }
 
 bool TruthTable::evaluate_expression(const std::string &expr, int row) {
-  std::stack<bool> operands;
-  std::stack<std::string> operators;
-
-  for (char c : expr) {
-    std::string token(1, c);
-    if (LogicalOperators::is_variable(token)) {
-      operands.push(get_variable_value(row, c));
-    } else if (LogicalOperators::is_operator(token)) {
-      while (!operators.empty() &&
-             LogicalOperators::precedence(operators.top()) >=
-                 LogicalOperators::precedence(token)) {
-        apply_operator(operators, operands);
-      }
-      operators.push(token);
-    } else if (token == LogicalOperators::LEFT_PARENTHESIS) {
-      operators.push(token);
-    } else if (token == LogicalOperators::RIGHT_PARENTHESIS) {
-      while (operators.top() != LogicalOperators::LEFT_PARENTHESIS) {
-        apply_operator(operators, operands);
-      }
-      operators.pop();
-    }
-  }
-
-  while (!operators.empty()) {
-    apply_operator(operators, operands);
-  }
-  return operands.top();
-}
-
-void TruthTable::apply_operator(std::stack<std::string> &operators,
-                                std::stack<bool> &operands) {
-  std::string op = operators.top();
-  operators.pop();
-
-  if (op == LogicalOperators::NOT) {
-    bool operand = operands.top();
-    operands.pop();
-    operands.push(!operand);
-  } else if (op == LogicalOperators::AND) {
-    bool operand2 = operands.top();
-    operands.pop();
-    bool operand1 = operands.top();
-    operands.pop();
-    operands.push(LogicalOperators::apply_operator(op, operand1, operand2));
-  }
+  return false;
 }
 
 int TruthTable::get_num_rows() const { return num_rows; }

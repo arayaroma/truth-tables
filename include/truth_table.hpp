@@ -1,5 +1,6 @@
 #pragma once
 #include "logger.hpp"
+#include "tree.hpp"
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -12,7 +13,6 @@
 class LogicalOperators;
 
 class TruthTable {
-
 private:
   int i;
   int num_rows, num_vars;
@@ -20,15 +20,14 @@ private:
   std::vector<std::string> expressions;
   std::string final_expression;
   std::set<std::string> variables;
-  std::set<std::string> literals;
   bool **table;
   bool **resolved_table;
+  Tree *tree;
 
 public:
   TruthTable();
   TruthTable &parse_expression(const std::string &expression);
   void parse_variables();
-  void parse_literals();
   std::vector<std::string> separate_expressions();
   TruthTable &build_table();
   TruthTable &show_variables();
@@ -45,8 +44,6 @@ public:
   std::string format_header(const std::string &item, int max_expr_length);
   std::string format_cell(bool value, int max_expr_length);
   bool evaluate_expression(const std::string &expr, int row);
-  void apply_operator(std::stack<std::string> &operators,
-                      std::stack<bool> &operands);
   int get_num_rows() const;
   int get_num_variables() const;
   std::string get_expression(int index) const;
@@ -54,4 +51,6 @@ public:
   void clean_table();
   bool get_variable_value(int row, char col) const;
   int get_column_by_variable(char variable) const;
+  void show_tree();
+  std::string infix_to_postfix(const std::string &expr);
 };

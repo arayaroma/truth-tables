@@ -15,6 +15,7 @@ set(SOURCES
     ${SOURCE_DIR}/logger.cpp
     ${SOURCE_DIR}/truth_table.cpp
     ${SOURCE_DIR}/logical_operators.cpp
+    ${SOURCE_DIR}/tree.cpp
 )
 
 set(HEADERS
@@ -22,6 +23,7 @@ set(HEADERS
     ${INCLUDE_DIR}/logger.hpp
     ${INCLUDE_DIR}/truth_table.hpp
     ${INCLUDE_DIR}/logical_operators.hpp
+    ${INCLUDE_DIR}/tree.hpp
 )
 
 add_executable(

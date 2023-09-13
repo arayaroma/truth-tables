@@ -50,9 +50,9 @@ void FileLoader::select_existing_file() {
 void FileLoader::load_file(const std::string &file) {
   std::ifstream input_file(directoryPath / file);
   std::string line;
-  TruthTable truthTable;
+  TruthTable truth_table;
   while (std::getline(input_file, line)) {
-    truthTable.parse_expression(line).show_variables().build_table();
+    truth_table.parse_expression(line).show_variables().build_table();
   }
   input_file.close();
 }
