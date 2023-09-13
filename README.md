@@ -46,7 +46,7 @@ For example:
 xy'+ x'y to xy' * x'y * +
 ```
 
-1. The binary tree used for evaluating the expression is not 
+2. The binary tree used for evaluating the expression is not 
 setting the is_negated flag correctly, for the negated variables.
 This is causing the program to not evaluate the expression correctly.
 
